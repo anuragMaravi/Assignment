@@ -17,15 +17,29 @@ TagType
 def add_tagtype(tag_name, tag_value):
 	data = {"data": {
 	        "name": tag_name,
-	        "value": tag_value
+	        "description": tag_value
 	    }}
 	a = requests.post(url + '/api/tagtype', headers = headers, data = json.dumps(data))
+	return a.text
+
+#Add tags to sensor	
+def add_tag_to_sensor(tags, sensor_id):
+	data = {
+	"data": tags
+	    }
+	a = requests.post(url + '/api/sensor/' + sensor_id + "/tags", headers = headers, data = json.dumps(data))
 	return a.text
 
 # Read Tags
 def read_tags(sensor_id):
 	response = requests.get(url + '/api/sensor/' + sensor_id + '/tags', headers = headers)
 	return response.text
+
+# Delete Tag
+def delete_tag_type(tag_name):
+	response = requests.delete(url + '/api/tagtype/' + tag_name, headers = headers)
+	return response.text	
+
 
 '''
 BuildingTemplate
@@ -53,7 +67,7 @@ def delete_building_template(template_name):
 
 
 '''
-Building
+Buildings
 '''
 
 # Create a new building
@@ -78,32 +92,6 @@ def delete_building(building_name):
 	response = requests.delete(url + '/api/building/' + building_name, headers = headers)
 	return response.text
 
-
-'''
-Building
-'''
-
-# Create a new building
-def create_building(building_name, building_description, building_template):
-	data = {"data": {
-	        "name": building_name,
-	        "description": building_description,
-	        "template": building_template
-	    }}
-	p = requests.post(url + '/api/building', headers = headers, data = json.dumps(data))
-	return p.text
-
-
-# Get building details
-def get_building(building_name):
-	response = requests.get(url + '/api/building/' + building_name, headers = headers)
-	return response.text
-
-
-# Delete building
-def delete_building(building_name):
-	response = requests.delete(url + '/api/building/' + building_name, headers = headers)
-	return response.text
 
 
 '''
@@ -139,10 +127,12 @@ Sensor
 # Create a Sensor
 def create_sensor(sensor_name, sensor_identifier, building):
 	data = {
-	        "name": sensor_name,
-	        "building": building,
-	        "identifier": sensor_identifier
-	    }
+	        "data":{
+		        "name": sensor_name,
+		        "identifier": sensor_identifier,
+		        "building": building
+		    	}
+	    	}
 	a = requests.post(url + '/api/sensor', headers = headers, data = json.dumps(data), verify=False)
 	return a.text
 
@@ -161,26 +151,51 @@ def search_sensor(sensor_identifier, building, tags):
 	response = requests.post(url + '/api/search', headers = headers, data = json.dumps(data))
 	return response.text
 
+
 '''
 Metadata
 '''
 
 # Add Metadata
-def add_metadata(name, value, sensor_id):
+def add_metadata(data, sensor_id):
 	data = {
-		  "data":{[
-          {
-            "name": name,
-            "value": value
-          }]
-		}}
-	a = requests.post(url + '/api/sensor' + sensor_id + '/metadata', headers = headers, data = json.dumps(data))
+		  "data":data
+		  }
+	a = requests.post(url + '/api/sensor/' + sensor_id + '/metadata', headers = headers, data = json.dumps(data))
 	return a.text
 
 # Read Metadata
 def read_metadata(sensor_id):
 	response = requests.get(url + '/api/sensor/' + sensor_id + '/metadata', headers = headers)
 	return response.text		
+
+'''
+SensorGroups
+'''
+
+# Create a Sensorgroup
+def create_sensor_group(group_name, building, group_description):
+	data = {
+	        "name": group_name,
+	        "building": building,
+	        "description": group_description
+	    }
+	a = requests.post(url + '/api/sensor_group', headers = headers, data = json.dumps(data))
+	return a.text
+
+# Add tags to Sensorgroup
+def add_tags_sensor_group(tags, group_name):
+	data = {
+		   "data": tags
+		}
+	a = requests.post(url + '/api/sensor_group/' + group_name + '/tags', headers = headers, data = json.dumps(data))
+	return a.text	
+
+# Get list of tags in SensorGroup
+def get_sensor_group(group_name):
+	response = requests.get(url + '/api/sensor_group/' + group_name + '/tags', headers = headers)
+	return response.text
+
 
 '''
 Usergroups
@@ -195,14 +210,10 @@ def create_user_group(group_name, group_description):
 	a = requests.post(url + '/api/user_group', headers = headers, data = json.dumps(data))
 	return a.text
 
-# Create a Usergroup
-def add_user_group(group_name):
-	data = {
-		   "data":[
-		            "synergy@gmail.com",
-		            "test@gmail.com"
-		          ]
-		}
+# Add users to UserGroup
+def add_user_to_group(users, group_name):
+	data = users
+		  		
 	a = requests.post(url + '/api/user_group/' + group_name + '/users', headers = headers, data = json.dumps(data))
 	return a.text	
 
@@ -216,11 +227,11 @@ Permission
 '''
 
 # Create Permission
-def create_permission(sensor_group, user_group, permission):
+def create_permission(user_group, sensor_group, permission):
 	data = {
 		  "data":{
-		      "sensor_group":sensor_group,
 		      "user_group":user_group,
+		      "sensor_group":sensor_group,
 		      "permission":permission
 		  }
 		}
@@ -271,44 +282,98 @@ if __name__ == '__main__':
 		headers = {'Authorization': 'bearer ' + access_token, 'content-type':'application/json'}
 
 		# Calling TagType functions
-		# print add_tagtype('corridor', 'corridor')
-		# print read_tags('26da099a-3fe0-4966-b068-14f51bcedb6e')
+		# print add_tagtype('tag2', 'Something')
+		tags = [
+           {
+            "name": "floor",
+            "value": "3600"
+           },
+           {
+            "name": "room",
+            "value": "3606"
+           }
+          ]
+		# print add_tag_to_sensor(tags,'d5b25356-6aa3-4341-8908-14e7f7852dc0')
+		# print read_tags('d5b25356-6aa3-4341-8908-14e7f7852dc0')
+		# print delete_tag_type('tag1')
+
 
 		# Calling BuildingTemplate functions
-		# print create_template('Test_Building_Template', 'New Building Template', ["floor","room","corridor"])
+		# print create_template('Test_Building_Template1', 'New Building Template', ["floor","room","corridor"])
 		# print get_building_template('Test_Building_Template')
 		# print delete_building_template('Test_Building_Template')
 
+
 		# Calling Builidng functions
 		# print create_building('Test_Building4', 'building_description2', 'Building1')
-		# print get_building('Building1')
+		# print get_building('Test_Building4')
 		# print delete_building('Test_Building')
+
 
 		# Calling DataService functions
 		# print create_dataservice('ds3', 'Test_ds3', '127.0.0.3', '83')
 		# print get_dataservice('ds3')
 		# print delete_dataservice('ds3')	
 
+
 		# Calling Sensor functions
 		# print create_sensor('Test Sensor', 'floor', 'B1')
-		# print get_sensor('Test Sensor')
-		# print search_sensor('Test Sensor', 'NSH', 'Sensor Tag')
+		# print get_sensor('c51fba09-5dff-46d2-880f-a27df0cf4eec')
+		# print search_sensor('c51fba09-5dff-46d2-880f-a27df0cf4eec', 'B1', ["floor:1"])
+
 
 		# Calling Metadata functions
-		# print add_metadata('name', 'value', 'id')
-		# print read_metadata('')
+		metadata = [
+          {
+            "name": "MAC",
+            "value": "01:02:03:04:05:06"
+          },
+          {
+            "name": "Type",
+            "value": "Temperature"
+          }
+         ]
+		# print add_metadata(metadata, 'c51fba09-5dff-46d2-880f-a27df0cf4eec')
+		# print read_metadata('c51fba09-5dff-46d2-880f-a27df0cf4eec')
+
+
+		# Calling SensorGroup functions
+		# print create_sensor_group('SG_B1', 'B1','Description for Sensor Group')
+		tags2 = [
+           {
+            "name": "floor",
+            "value": "floor"
+           }
+          ]
+		# print add_tags_sensor_group(tags2, 'SG_B1',)
+		# print get_sensor_group('SG_B1')
+
 
 		# Calling UserGroup functions
-		# print create_user_group('Test User Group', 'Description for User Group')
-		# print add_user_group('Test User Group')
+		# print create_user_group('Test_User_Group', 'Description for User Group')
+		users = {
+				"data":[
+			    {
+			      "manager": False, 
+			      "user_id": "anurag1@gmail.com"
+			    },
+			    {
+			      "manager": False, 
+			      "user_id": "anurag@gmail.com"
+			    }
+			  ]
+			  }
+		# print add_user_to_group(users, 'Test_User_Group')
 		# print get_user_group('Test User Group')
 
+
 		# Calling Permission functions
-		# print create_permission('Test Sensor Group', 'Test User Group', 'r')
-		# print get_permission('Test Sensor Group', 'Test User Group')
-		# print delete_permission('Test Sensor Group', 'Test User Group')
+		# print create_permission('Test User Groupr', 'SG_B1', 'r')
+		# print get_permission('Test User Groupr', 'SG_B1')
+		# print delete_permission('Test User Groupr', 'SG_B1')
+
 
 		# Calling User functions
-		print add_user('Anurag', 'Last', 'anurag1@gmail.com', 'super')
-		# print get_user_details('anurag@gmail.com')
-		# print remove_user('anurag@gmail.com')
+		# print add_user('Anurag', 'Last', 'anurag12@gmail.com', 'default')
+		print get_user_details('anurag12@gmail.com')
+		# print remove_user('anurag12@gmail.com')
